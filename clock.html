@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> dual clock </title>
+  <style>
+    html,body{  width: 100%;  height: 100%;  }
+    body{
+      margin:0;  font-family:Arial,"맑은 고딕",sans-serif;
+      display:flex;   justify-content:center;  align-items:center;
+    }
+    .clock-container{
+      display:flex;  gap:50px;  
+    }
+    .clock-wrapper{
+      text-align:center;
+    }
+    .clock{
+      width:200px;  height:200px;  border:8px solid #2c3e50;  
+      border-radius:50%;  position:relative;  background:#fff;
+      box-shadow:0 5px 6px rgba(0,0,0,0.1);
+    }
+    .clock-center{
+      width:12px;  height:12px;  background:#2c3e50;  border-radius:50%;
+      position:absolute;  top:50%;  left:50%;  transform:translate(-50%,-50%);
+      z-index:10;
+    }
+    .pointer{
+      position:absolute;  left:50%;  bottom:50%;  transform-origin:bottom;
+      background:#2c3e50; border-radius: 5px;
+    }
+    .hour{
+      width:4px;  height:60px;  margin-left:-2px;  background:#2c3e50;
+      z-index:1;
+    }
+    .minute{
+      width:3px;  height:80px;  margin-left:-1.5px;  background:#3498db;
+      z-index:2;
+    }
+    .second{
+      width:2px;  height:90px;  margin-left:-1px;  background:#e74c3c;
+      z-index:3;
+    }
+    .marks{
+      position:absolute;  width:100%;  height:100%;  
+    }
+    .marks > div{
+      width:2px;  height:100%;  position:absolute;  left:50%;  margin-left:-1px;
+      transform-origin:50% 50%;
+    }
+    .marks > div::before{
+      content:""; width:2px; height:8px; background:#2c3e50; position:absolute;
+      top:0;
+    }
+    .marks > div::after{
+      content:""; width:2px; height:8px; background:#2c3e50; position:absolute;
+      bottom:0;
+    }
+    select{
+      padding:8px 16px;  font-size:17px;  border-radius:5px;
+      border:1px solid #ccc;  margin:12px 0;  width:200px;
+    }
+    .time-info{
+      background:#ddd;  padding:15px 25px;  border-radius:8px;
+      box-shadow:0 2px 4px rgba(0,0,0,0.1);  margin-top:10px;
+    }
+    .digital-time{
+      font-size:1.4em;  font-weight:bold;  margin:6px 0;  
+    }
+    .time-diff{ 
+      color:#666;  font-size:0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="clock-container">
+    <div class="clock-wrapper">
+      <div class="clock" id="clock1">
+        <div class="marks">
+          <div style="transform:rotate(0deg)"></div>
+          <div style="transform:rotate(30deg)"></div>
+          <div style="transform:rotate(60deg)"></div>
+          <div style="transform:rotate(90deg)"></div>
+          <div style="transform:rotate(120deg)"></div>
+          <div style="transform:rotate(150deg)"></div>
+        </div>
+        <div class="pointer hour" id="hour1"></div>
+        <div class="pointer minute" id="minute1"></div>
+        <div class="pointer second" id="second1"></div>
+        <div class="clock-center"></div>
+      </div>
+      <select id="city1">
+        <option value="Asia/Seoul" selected>서울</option>
+        <option value="America/New_York">뉴욕</option>
+        <option value="Europe/London">런던</option>
+        <option value="Europe/Paris">파리</option>
+        <option value="Australia/Sydney">시드니</option>
+        <option value="Asia/Dubai">두바이</option>
+        <option value="Asia/Tokyo">도쿄</option>
+      </select>
+      <div class="time-info">
+        <div class="digital-time" id="digital1"></div>
+        <div class="time-diff" id="diff1"></div>
+      </div>
+    </div>
+
+    <div class="clock-wrapper">
+      <div class="clock" id="clock2">
+        <div class="marks">
+          <div style="transform:rotate(0deg)"></div>
+          <div style="transform:rotate(30deg)"></div>
+          <div style="transform:rotate(60deg)"></div>
+          <div style="transform:rotate(90deg)"></div>
+          <div style="transform:rotate(120deg)"></div>
+          <div style="transform:rotate(150deg)"></div>
+        </div>
+        <div class="pointer hour" id="hour2"></div>
+        <div class="pointer minute" id="minute2"></div>
+        <div class="pointer second" id="second2"></div>
+        <div class="clock-center"></div>
+      </div>
+      <select id="city2">
+        <option value="Asia/Seoul">서울</option>
+        <option value="America/New_York" selected>뉴욕</option>
+        <option value="Europe/London">런던</option>
+        <option value="Europe/Paris">파리</option>
+        <option value="Australia/Sydney">시드니</option>
+        <option value="Asia/Dubai">두바이</option>
+        <option value="Asia/Tokyo">도쿄</option>
+      </select>
+      <div class="time-info">
+        <div class="digital-time" id="digital2"></div>
+        <div class="time-diff" id="diff2"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    /*
+      date.toLocaleTimeString() 속성  timezone - 'Asia/Seoul'
+        year : 'numeric' / '2-digit' : 항상 2자리,
+        hour: 'numeric' / '2-digit' : 항상 2자리,
+        minute : 'numeric' / '2-digit' : 항상 2자리,
+        second : 'numeric' / '2-digit' : 항상 2자리,
+        timeZoneName: 'shor'(GMT+9) / 'long'( korea standard time ),
+        timeZone : 특정시간대 ( 'Asia/Seoul'),
+        weekday : 'long'(Monday) / 'short'(Mon) / 'narrow'(M), 
+        month : 'numeric' / '2-digit' / 'long' / 'short' / 'narrow'
+      -------------------------------------------------------------
+      date.getTimezoneOffset() : 현재날짜 로컬시간대 차이를 분단위로 변환
+    */
+    const updateClock=(clockNum, timezone)=>{
+      const date = new Date();
+      const localTime = date.getTime();
+      const localOffset = date.getTimezoneOffset() * 60000;
+      const targetDate = new Date(date.toLocaleString('en-US', { timeZone: timezone }));
+
+      const hours = targetDate.getHours();
+      const minutes = targetDate.getMinutes();
+      const seconds = targetDate.getSeconds();
+
+      const hourDeg = (hours % 12 + minutes / 60) * 30;
+      const minuteDeg = minutes * 6;
+      const secondDeg = seconds * 6;
+
+      document.getElementById(`hour${clockNum}`).style.transform=`rotate(${hourDeg}deg)`;
+      document.getElementById(`minute${clockNum}`).style.transform=`rotate(${minuteDeg}deg)`;
+      document.getElementById(`second${clockNum}`).style.transform=`rotate(${secondDeg}deg)`;
+
+      const digitalTime = targetDate.toLocaleTimeString('ko-KR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false // 24시 형식
+      });
+      document.getElementById(`digital${clockNum}`).textContent = digitalTime;
+
+      const targetTime = targetDate.getTime();
+      const diffHours = (targetTime - localTime) / (1000 * 60 * 60);
+      const sign = diffHours >= 0 ? '+' : '';
+      document.getElementById(`diff${clockNum}`).textContent = 
+          `한국 시간과의 시차: ${sign}${diffHours.toFixed(1)}시간`; 
+          /* 소수점 1자리까지 문자열로 반환 */
+    }
+
+    const citySelect1 = document.getElementById('city1');
+    const citySelect2 = document.getElementById('city2');
+
+    const initializeClocks=()=> {
+      const city1Select = document.getElementById('city1');
+      const city2Select = document.getElementById('city2');
+      const updateBothClocks=()=> {
+          updateClock(1, city1Select.value);
+          updateClock(2, city2Select.value);
+      }
+      city1Select.addEventListener('change', updateBothClocks);
+      city2Select.addEventListener('change', updateBothClocks);
+
+      updateBothClocks();
+      setInterval(updateBothClocks, 1000);
+    }
+    initializeClocks();    
+  </script>
+</body>
+</html>
